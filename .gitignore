@@ -4,3 +4,5 @@ argtest.bat
 master
 ignore
 *.exe
+*.dnm
+*.fur

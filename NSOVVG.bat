@@ -22,13 +22,17 @@ set "layout="
 set argC=-1
 for %%x in (%*) do Set /A argC+=1
 
+::USER CONFIG VAULES::
 set x_res=720
 set y_res=480
 set "colorvaule=White"
 set "linemode=p2p"
+set "bitrate=2000k"
+set "scalemode=lin"
+set "gain=4"
 
+set "beforeshowwaves=volume=!gain![gained"
 set "stack_num=!argC!"
-
 set /a stack_y_res=y_res / stack_num
 set /a remainder=y_res %% stack_num
 set /a last_stack_y_res=stack_y_res + remainder
@@ -43,15 +47,15 @@ set /a channelCount+=1
 set "channelInputs=!channelInputs! -i "%~1""
 if "!channelCount!"=="!argC!" (
 	if !argC!==1 (
-		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!x_res!x!last_stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=log;"
+		set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode!;"
 	) else (
-		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!x_res!x!last_stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
+		set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode![wave%channelCount%];"
 	)
 ) else (
 	if !argC!==1 (
-		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!x_res!x!stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=log;"
+		set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode!;"
 	) else (
-		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!x_res!x!stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
+		set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode![wave%channelCount%];"
 	)
 )
 if !argC!==1 (
@@ -75,7 +79,8 @@ if "!argC!"=="1" (
 rem set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
 
 :: 최종 명령어 실행
- .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% output.mp4
-echo ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% output.mp4
+ .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac -b:v !bitrate! -b:a 240k %outer% outSput.mp4
+ echo  .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac -b:v !bitrate! -b:a 240k %outer% output.mp4
+rem echo ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% output.mp4
 endlocal		
 rem ffmpeg -y -i ".\master\temp_fur2oscmst.wav"  -i ".\master\temp_fur2oscmst.wav" -i "ch2.wav" -i "ch3.wav" -filter_complex " [1:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave1]; [2:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave2]; [3:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave3]; [wave1][wave2][wave3]vstack=inputs=3[v2];" -c:v h264_qsv -format yuv420p -map [v2] output.mp4
