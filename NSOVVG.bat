@@ -1,4 +1,4 @@
-	@echo off
+@echo off
 setlocal enabledelayedexpansion
 
 :: 입력 인수 확인
@@ -44,12 +44,20 @@ if "%~1"=="" goto endloop
 set /a channelCount+=1
 set "channelInputs=!channelInputs! -i "%~1""
 if "!channelCount!"=="!argC!" (
-	set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!last_stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
+	if !argC!==1 (
+		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!last_stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log;"
+	) else (
+		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!last_stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
+	)
 ) else (
-	set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
+	if !argC!==1 (
+		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log;"
+	) else (
+		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
+	)
 )
-if %channelCount%==1 (
-    set "layout=[wave1]"
+if !argC!==1 (
+    set "layout="
 ) else (
     set "layout=!layout![wave%channelCount%]"
 )
@@ -57,13 +65,19 @@ rem shift
 goto loop
 
 :endloop
-
+echo %channelCount% %argC%
 :: 최종 출력 레이아웃을 정의
-set "layout=!layout!hstack=inputs=%channelCount%[v2];"
-set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
+if "!argC!"=="1" (
+	set "layout=!layout!"
+	set "outer=-c:v h264_qsv -format yuv420p"
+) else (
+	set "layout=!layout!hstack=inputs=%channelCount%[v2];"
+	set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
+)
+rem set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
 
 :: 최종 명령어 실행
-rem .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" %outer% output.mp4
+ .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" %outer% output.mp4
 echo ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%"	 %outer% output.mp4
 endlocal		
 rem ffmpeg -y -i ".\master\temp_fur2oscmst.wav"  -i ".\master\temp_fur2oscmst.wav" -i "ch2.wav" -i "ch3.wav" -filter_complex " [1:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave1]; [2:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave2]; [3:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave3]; [wave1][wave2][wave3]hstack=inputs=3[v2];" -c:v h264_qsv -format yuv420p -map [v2] output.mp4
