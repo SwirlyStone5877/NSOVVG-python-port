@@ -21,18 +21,16 @@ set "filterComplex="
 set "layout="
 set argC=-1
 for %%x in (%*) do Set /A argC+=1
-set x_res=1920
-set y_res=1080
-set "stack_num=!argC!"
-::set output_x_res=1920
-::set output_y_res=1080
+
+set x_res=720
+set y_res=480
 set "colorvaule=White"
+set "linemode=p2p"
+
+set "stack_num=!argC!"
 
 set /a stack_x_res=x_res / stack_num
 set /a remainder=x_res %% stack_num
-rem echo %stack_x_res% %y_res%
-REM exit
-:: 나머지 분배 (가장 간단한 방법, 다른 방법으로도 가능)
 set /a last_stack_x_res=stack_x_res + remainder
 
 rem echo !last_stack_x_res!
@@ -45,15 +43,15 @@ set /a channelCount+=1
 set "channelInputs=!channelInputs! -i "%~1""
 if "!channelCount!"=="!argC!" (
 	if !argC!==1 (
-		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!last_stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log;"
+		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!last_stack_x_res!x!y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=log;"
 	) else (
-		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!last_stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
+		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!last_stack_x_res!x!y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
 	)
 ) else (
 	if !argC!==1 (
-		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log;"
+		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!stack_x_res!x!y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=log;"
 	) else (
-		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!stack_x_res!x!y_res!:mode=line:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
+		set "filterComplex=!filterComplex! [%channelCount%:a]showwaves=s=!stack_x_res!x!y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=log[wave%channelCount%];"
 	)
 )
 if !argC!==1 (
@@ -77,7 +75,7 @@ if "!argC!"=="1" (
 rem set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
 
 :: 최종 명령어 실행
- .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" %outer% output.mp4
-echo ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%"	 %outer% output.mp4
+ .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% output.mp4
+echo ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% output.mp4
 endlocal		
 rem ffmpeg -y -i ".\master\temp_fur2oscmst.wav"  -i ".\master\temp_fur2oscmst.wav" -i "ch2.wav" -i "ch3.wav" -filter_complex " [1:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave1]; [2:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave2]; [3:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave3]; [wave1][wave2][wave3]hstack=inputs=3[v2];" -c:v h264_qsv -format yuv420p -map [v2] output.mp4
