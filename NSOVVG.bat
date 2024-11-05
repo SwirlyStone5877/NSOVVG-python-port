@@ -44,7 +44,7 @@ set "linemode=p2p"
 set "bitrate=5000k"
 set "scalemode=lin"
 set "gain=4"
-set "gpu=h264_qsv"
+set "gpu=libx264"
 set "fps=60"
 ::USER CONFIG VAULES_END::
 
