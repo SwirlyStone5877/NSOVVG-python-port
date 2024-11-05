@@ -30,9 +30,10 @@ set x_res=1280
 set y_res=720
 set "colorvaule=White"
 set "linemode=p2p"
-set "bitrate=1000k"
+set "bitrate=5000k"
 set "scalemode=lin"
 set "gain=4"
+set "gpu=libx264"
 
 set "beforeshowwaves=volume=!gain![gained"
 set "stack_num=!argC!"
@@ -136,19 +137,19 @@ echo %channelCount% %argC%
 :: 최종 출력 레이아웃을 정의
 if "!argC!"=="1" (
 	set "layout=!layout!"
-	set "outer=-c:v h264_qsv -format yuv420p"
+	set "outer=-c:v !gpu! -format yuv420p"
 ) else if !argC! GTR !autosortvaule! (
 	set "filterComplex=!H1F!!H2F!"
 	set "layout=!layout![left][right]hstack=inputs=2[v2];"
-	set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
+	set "outer=-c:v !gpu! -format yuv420p -map [v2]"
 ) else (
 	set "layout=!layout!vstack=inputs=%channelCount%[v2];"
-	set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
+	set "outer=-c:v !gpu! -format yuv420p -map [v2]"
 )
 rem echo !layout!
 
 
-rem set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
+rem set "outer=-c:v !gpu! -format yuv420p -map [v2]"
 
 :: 최종 명령어 실행
  rem .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac -b:v !bitrate! -b:a 240k %outer% output.mp4
@@ -168,4 +169,4 @@ if /i "!anser!"=="R" (
 	exit
 )
 endlocal		
-rem ffmpeg -y -i ".\master\temp_fur2oscmst.wav"  -i ".\master\temp_fur2oscmst.wav" -i "ch2.wav" -i "ch3.wav" -filter_complex " [1:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave1]; [2:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave2]; [3:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave3]; [wave1][wave2][wave3]vstack=inputs=3[v2];" -c:v h264_qsv -format yuv420p -map [v2] output.mp4
+rem ffmpeg -y -i ".\master\temp_fur2oscmst.wav"  -i ".\master\temp_fur2oscmst.wav" -i "ch2.wav" -i "ch3.wav" -filter_complex " [1:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave1]; [2:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave2]; [3:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave3]; [wave1][wave2][wave3]vstack=inputs=3[v2];" -c:v !gpu! -format yuv420p -map [v2] output.mp4
