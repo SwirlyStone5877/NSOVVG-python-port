@@ -2,6 +2,7 @@
 setlocal enabledelayedexpansion
 title NSOVVG - Not Serious Oscilloscope View Video Generator
 echo [101;93mFor some reason, file names containing hyphens (-) occurs an error when validating arguments.[0m
+echo [1;95mSince this does not yet have the ability to save and load presets, all settings can only be changed on line 40 of this script.[0m
 
 :: 입력 인수 확인
 if "%1"=="" (
@@ -43,7 +44,9 @@ set "linemode=p2p"
 set "bitrate=5000k"
 set "scalemode=lin"
 set "gain=4"
-set "gpu=libx264"
+set "gpu=h264_qsv"
+set "fps=60"
+::USER CONFIG VAULES_END::
 
 set "beforeshowwaves=volume=!gain![gained"
 set "stack_num=!argC!"
@@ -67,11 +70,11 @@ if !argC! GTR !autosortvaule! (
 	echo !h2number! !h1number!
 	set /a H1_y_res=y_res / h2number
 	set /a H1remainder=y_res %% h2number
-	set /a last_H1_y_res=H1_y_res + remainder
+	set /a last_H1_y_res=H1_y_res + H1remainder
 
 	set /a H2_y_res=y_res / h1number
 	set /a H2remainder=y_res %% h1number
-	set /a last_H2_y_res=H2_y_res + remainder
+	set /a last_H2_y_res=H2_y_res + H2remainder
 
 	set /a x_res=x_res/2
 	echo !x_res!
@@ -90,11 +93,11 @@ if !argC! GTR !autosortvaule! (
 		set /a H1Count+=1
 		if "!H1Count!"=="!h2number!" (
 
-				set "H1F=!H1F! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_H1_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode![wave%channelCount%];"
+				set "H1F=!H1F! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_H1_y_res!:mode=!linemode!:colors=!colorvaule!:rate=!fps!:scale=!scalemode![wave%channelCount%];"
 				set "layout=!layout![wave%channelCount%]vstack=inputs=!H1Count![left];"
 		) else (
 
-				set "H1F=!H1F! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!H1_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode![wave%channelCount%];"
+				set "H1F=!H1F! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!H1_y_res!:mode=!linemode!:colors=!colorvaule!:rate=!fps!:scale=!scalemode![wave%channelCount%];"
 				set "layout=!layout![wave%channelCount%]"
 		)
 
@@ -105,11 +108,11 @@ if !argC! GTR !autosortvaule! (
 		if "!H2Count!"=="!h1number!" (
 				
 
-				set "H2F=!H2F! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_H2_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode![wave%channelCount%];"
+				set "H2F=!H2F! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_H2_y_res!:mode=!linemode!:colors=!colorvaule!:rate=!fps!:scale=!scalemode![wave%channelCount%];"
 				set "layout=!layout![wave%channelCount%]vstack=inputs=!H2Count![right];"
 		) else (
 
-				set "H2F=!H2F! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!H2_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode![wave%channelCount%];"
+				set "H2F=!H2F! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!H2_y_res!:mode=!linemode!:colors=!colorvaule!:rate=!fps!:scale=!scalemode![wave%channelCount%];"
 				set "layout=!layout![wave%channelCount%]"
 		)
 
@@ -120,15 +123,15 @@ if !argC! GTR !autosortvaule! (
 ) else (
 	if "!channelCount!"=="!argC!" (
 		if !argC!==1 (
-			set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode!;"
+			set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=!fps!:scale=!scalemode!;"
 		) else (
-			set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode![wave%channelCount%];"
+			set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!last_stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=!fps!:scale=!scalemode![wave%channelCount%];"
 		)
 	) else (
 		if !argC!==1 (
-			set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode!;"
+			set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=!fps!:scale=!scalemode!;"
 		) else (
-			set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=60:scale=!scalemode![wave%channelCount%];"
+			set "filterComplex=!filterComplex! [%channelCount%:a]!beforeshowwaves!%channelCount%];[gained%channelCount%]showwaves=s=!x_res!x!stack_y_res!:mode=!linemode!:colors=!colorvaule!:rate=!fps!:scale=!scalemode![wave%channelCount%];"
 		)
 	)
 	if !argC!==1 (
@@ -165,6 +168,7 @@ if /i "!ERRORLEVEL!"=="2" (
 ) else if /i "!ERRORLEVEL!"=="1" (
 
 	ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% -f nut - | ffplay - 
+	echo ^(Ignore if it said "Conversion failed^!"^)
 	
 ) else (
 	echo Aborted.
