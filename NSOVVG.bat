@@ -1,13 +1,15 @@
 @echo off
 setlocal enabledelayedexpansion
+title NSOVVG - Not Serious Oscilloscope View Video Generator
+echo [101;93mFor some reason, file names containing hyphens (-) occurs an error when validating arguments.[0m
 
 :: 입력 인수 확인
 if "%1"=="" (
-    echo 마스터 오디오 파일을 지정해야 합니다.
+    echo Please provide the master audio channel^^!
     exit /b
 )
 if "%2"=="" (
-    echo 적어도 하나의 채널 오디오 파일을 지정해야 합니다.
+    echo Please provide at least one channel^^!
     exit /b
 )
 
@@ -23,8 +25,16 @@ set "filterComplex="
 set "layout="
 set "autosortvaule=4"
 set argC=-1
-for %%x in (%*) do Set /A argC+=1
+for %%x in (%*) do (
+	if exist "%%x" (
 
+		Set /A argC+=1
+		
+	) else (
+		echo Error^^! The file "%%x" does not exist^^!
+		exit
+	)
+)
 ::USER CONFIG VAULES::
 set x_res=1280
 set y_res=720
@@ -107,7 +117,6 @@ if !argC! GTR !autosortvaule! (
 
 	)
 	
-REM exit
 ) else (
 	if "!channelCount!"=="!argC!" (
 		if !argC!==1 (
@@ -146,16 +155,9 @@ if "!argC!"=="1" (
 	set "layout=!layout!vstack=inputs=%channelCount%[v2];"
 	set "outer=-c:v !gpu! -format yuv420p -map [v2]"
 )
-rem echo !layout!
 
-
-rem set "outer=-c:v !gpu! -format yuv420p -map [v2]"
-
-:: 최종 명령어 실행
- rem .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac -b:v !bitrate! -b:a 240k %outer% output.mp4
-rem  echo  .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac -b:v !bitrate! -b:a 240k %outer% output.mp4
 :playorrender
-set /p anser=Type "P" to preview, Type "R" to render
+set /p anser=Type "P" to preview, Type "R" to render. 
 if /i "!anser!"=="R" (
 
 	ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% output.mp4
@@ -165,8 +167,7 @@ if /i "!anser!"=="R" (
 	ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% -f nut - | ffplay - 
 	
 ) else (
-	echo Error
+	echo Aborted.
 	exit
 )
-endlocal		
-rem ffmpeg -y -i ".\master\temp_fur2oscmst.wav"  -i ".\master\temp_fur2oscmst.wav" -i "ch2.wav" -i "ch3.wav" -filter_complex " [1:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave1]; [2:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave2]; [3:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave3]; [wave1][wave2][wave3]vstack=inputs=3[v2];" -c:v !gpu! -format yuv420p -map [v2] output.mp4
+endlocal
