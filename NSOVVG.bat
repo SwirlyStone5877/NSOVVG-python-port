@@ -157,12 +157,12 @@ if "!argC!"=="1" (
 )
 
 :playorrender
-set /p anser=Type "P" to preview, Type "R" to render. 
-if /i "!anser!"=="R" (
+CHOICE /C PR /N /M "Press "P" to preview, or "R" to render. "
+if /i "!ERRORLEVEL!"=="2" (
 
 	ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% output.mp4
 	
-) else if /i "!anser!"=="P" (
+) else if /i "!ERRORLEVEL!"=="1" (
 
 	ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% -f nut - | ffplay - 
 	
