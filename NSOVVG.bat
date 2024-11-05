@@ -40,12 +40,6 @@ set /a stack_y_res=y_res / stack_num
 set /a remainder=y_res %% stack_num
 set /a last_stack_y_res=stack_y_res + remainder
 
-echo !last_stack_y_res!, !stack_y_res!, !x_res!
-rem exit
-rem echo !last_stack_y_res!
-
-rem SET /A argc-=1
-
 if !argC! GTR !autosortvaule! (
 	echo AUTO CHANNEL SORTING
 
@@ -151,7 +145,7 @@ if "!argC!"=="1" (
 	set "layout=!layout!vstack=inputs=%channelCount%[v2];"
 	set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
 )
-echo !layout!
+rem echo !layout!
 
 
 rem set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
@@ -159,6 +153,19 @@ rem set "outer=-c:v h264_qsv -format yuv420p -map [v2]"
 :: 최종 명령어 실행
  rem .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac -b:v !bitrate! -b:a 240k %outer% output.mp4
 rem  echo  .\ffmpeg -y -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac -b:v !bitrate! -b:a 240k %outer% output.mp4
-ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% output.mp4
+:playorrender
+set /p anser=Type "P" to preview, Type "R" to render
+if /i "!anser!"=="R" (
+
+	ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% output.mp4
+	
+) else if /i "!anser!"=="P" (
+
+	ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% -f nut - | ffplay - 
+	
+) else (
+	echo Error
+	exit
+)
 endlocal		
 rem ffmpeg -y -i ".\master\temp_fur2oscmst.wav"  -i ".\master\temp_fur2oscmst.wav" -i "ch2.wav" -i "ch3.wav" -filter_complex " [1:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave1]; [2:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave2]; [3:a]showwaves=s=1280x720:mode=p2p:colors=Spectrum[wave3]; [wave1][wave2][wave3]vstack=inputs=3[v2];" -c:v h264_qsv -format yuv420p -map [v2] output.mp4
