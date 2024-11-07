@@ -6,3 +6,6 @@ ignore
 *.exe
 *.dnm
 *.fur
+*.ini
+CLINSOVVG.bat
+images
