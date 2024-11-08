@@ -1,4 +1,5 @@
 @echo    off
+
 SETLOCAL ENABLEDELAYEDEXPANSION
 title Not Serious Oscilloscope View Video Generator - by @Èñ¹ÎHeemin
 rem CHOICE /C PR /N /M "Press "P" to preview, or "R" to render. "
@@ -10,20 +11,50 @@ set "fps=60"
 set "bitrate=5000k"
 set "linemode=p2p"
 set "chosenfiles="
+rem set "configpath=%APPDATA%\NSOVVG\config.ini"
+echo Detecting your GPU... Please wait!
+set "gpu=libx264"
+
+rem FUCK WHY IT DOES NOT WORK AAAAAAAAAAAAAAAAAAAAAAA
+for /f "tokens=2 delims==" %%G in ('wmic path win32_videocontroller get name /value') do set "gpu_name=%%G"
+
+echo !gpu_name! | find /i "NVIDIA" >nul
+if %errorlevel%==0 (
+    set "gpu=h264_nvenc"
+    goto drawlogo
+)
+
+echo !gpu_name! | find /i "Intel" >nul
+if %errorlevel%==0 (
+    set "gpu=h264_qsv"
+    goto drawlogo
+)
+
+echo !gpu_name! | find /i "AMD" >nul
+if %errorlevel%==0 (
+    set "gpu=h264_amf"
+    goto drawlogo
+)
+REM echo !gpu!
+
+
+rem ecoh 
+
 REM set "channel1=fuck"
 
 :drawlogo
-
+REM echo !gpu!
 call :reallogo
 
 
 :menu
 echo 	[44m[97m[O] - Open config file[0m		[44m[97m[S] - Save config file[0m
-echo.
+rem echo.
 echo 	[44m[97m[M] - Choose the master audio[0m	[44m[97m[C] - Choose the audio channels[0m
-echo.
+rem echo.
 echo 	[44m[97m[D] - Change display mode[0m	[44m[97m[F] - Configure the audio channels[0m
-echo.
+rem echo.
+echo 	[44m[97m[G] - Global configure[0m		[44m[97m[L] - Clear the channels[0m
 echo 	[44m[97m[X] - Set output resolution, FPS[0m[101m[93m[R] - Render^^![0m
 echo.
 rem for /l %%i in (1,1,100) do (
@@ -39,7 +70,7 @@ set i=1
 rem :forout
 
 rem echo 	[33mChosen master audio: [93m!masteraudio![0m
-CHOICE /C OSMCDFXR /N
+CHOICE /C OSMCDFXRGL /N
 if /i "!ERRORLEVEL!"=="5" (
 		if "!linemode!"=="point" (
 		set "linemode=p2p"
@@ -88,7 +119,7 @@ if /i "!ERRORLEVEL!"=="4" (
 		set "channel!i!=%%I"
 		set "label!i!=Channel !i!"
 		set "amp!i!=2"
-		set "color!i!=Yellow"
+		set "color!i!=#FFFFFF"
 	)
 	if !i! NEQ 0 (
 		CALL :clearch
@@ -109,7 +140,7 @@ if /i "!ERRORLEVEL!"=="6" (
 	rem echo !channel%i%!	xcopychannel%i%
 	if not "!channel%i%!"=="" (
 		rem set "choisenumbers=!choisenumbers!!i!"
-		set "choisenumbers=!choisenumbers!!i!"
+		set "choisenumbers=!i!"
 		call :channelshow
 		rem echo !i!
 		rem set "choisenumbers=!choisenumbers!!i!"
@@ -117,13 +148,22 @@ if /i "!ERRORLEVEL!"=="6" (
 		goto channelconfig
 	)
 	
-	echo.
+	echo [0m
 	rem echo !choisenumbers!
 	
-	CHOICE /C !choisenumbers! /N /M "[0mWhich channel would you like to configure?"
-	SET "configch=!ERRORLEVEL!"
+	REM CHOICE /C !choisenumbers! /N /M "[0mWhich channel would you like to configure?"
+	:reask
+	if defined channel2 (
+		SET /P configch=Which channel would you like to configure? 
+	) else (
+		set configch=1
+	)
+	echo.
+	rem echo aw%configch%fuck
+	if not defined channel!configch! call :errmsg "Invalid vaule" && goto reask
+	rem SET "configch=!ERRORLEVEL!"
 	ECHO Which configuration would you like to configure?
-	echo 	[44m[97m[L] - Label Text[0m		[44m[97m[A] - Amplification[0m		[44m[97m[C] - Wave Color[0m		[44m[97m[X] - Cancel[0m
+	echo 	[44m[97m[L] - Label Text[0m		[44m[97m[A] - Amplification[0m		[44m[97m[C] - Wave Color[0m		[100m[97m[X] - Cancel[0m
 	CHOICE /C LACX /N
 	if "!ERRORLEVEL!"=="1" (
 		call :inputbox "Please Type Label Text for Channel No. !configch!" "NSOVVG"
@@ -138,9 +178,12 @@ if /i "!ERRORLEVEL!"=="6" (
 		)
 	)
 	if "!ERRORLEVEL!"=="3" (
-		call :inputbox "Please Type Hex Color for Channel No. !configch! (Example: 1CFF73)" "NSOVVG"
-		if not "!input!"=="" (
-			set "color!configch!=!input!"
+		rem call :inputbox "Please Type Hex Color for Channel No. !configch! (Example: 1CFF73)" "NSOVVG"
+		for /f "usebackq tokens=*" %%A in (`powershell -command ^
+		"Add-Type -AssemblyName System.Windows.Forms; $colorDialog = New-Object System.Windows.Forms.ColorDialog; if ($colorDialog.ShowDialog() -eq 'OK') { $colorDialog.Color.ToArgb().ToString('X8') } else { 'None' }"`) do set "color=%%A"
+
+		if not "!color!"=="None" (
+			set "color!configch!=#!color:~2!"
 			rem set "amp!configch!=!input!"
 		)
 	)
@@ -188,7 +231,7 @@ IF /I "!ERRORLEVEL!"=="1" (
 if /i "!ERRORLEVEL!"=="8" (
 	if not defined channel1 ( call :errmsg "You need to add the audio channels first" && goto drawlogo )
 	if "!masteraudio!"=="None" ( call :errmsg "You need to choose the master audio" && goto drawlogo )
-	echo 	[101m[93m[R] - Render^^![0m		[46m[97m[P] - Preview[0m		[44m[97m[X] - Cancel[0m
+	echo 	[101m[93m[R] - Render^^![0m		[46m[97m[P] - Preview[0m		[100m[97m[X] - Cancel[0m
 	CHOICE /C RPX /N
 	if /i "!ERRORLEVEL!"=="1" (
 		for /f "delims=" %%a in ('powershell -command "[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null; $f = New-Object System.Windows.Forms.SaveFileDialog; $f.Filter = 'Video File|*.mp4'; $f.Multiselect = $false; if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Host $f.FileName } else { Write-Host 'None' }"') do set "saveFile=%%a"
@@ -203,6 +246,111 @@ if /i "!ERRORLEVEL!"=="8" (
 			goto render
 	)
 	goto drawlogo
+)
+if /i "!ERRORLEVEL!"=="9" (
+	if not defined channel1 ( call :errmsg "You have no channels to configure" && goto drawlogo )
+	set i=0
+	echo.
+	ECHO [0mWhich configuration would you like to configure globally?
+	echo 	[44m[97m[L] - Label Text[0m		[44m[97m[A] - Amplification[0m		[44m[97m[C] - Wave Color[0m		[100m[97m[X] - Cancel[0m
+	CHOICE /C LACX /N
+	echo.
+	if /i "!ERRORLEVEL!"=="1" (
+		rem set i=0
+		echo Which channel name template do you want?
+		echo 	[44m[97m[1] - "Channel No. $"[0m		[44m[97m[2] - "Channel #$"[0m		[44m[97m[3] - Use the name of the file[0m
+		echo		[44m[97m[4] - Custom[0m			[44m[97m[5] - Clear[0m			[100m[97m[X] - Cancel[0m
+		rem CHOICE /C 12345X /N
+		for /f %%A in ('powershell -command "$key = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown').Character; Write-Host $key"') do set "userInput=%%A"
+		if /i "!userInput!"=="5" (
+			:labelset1
+			Set /A i+=1
+			if not "!channel%i%!"=="" (
+				set "label!i!="
+				goto labelset1
+			)
+		)
+		IF /I "!userInput!"=="1" (
+			:labelset2
+			Set /A i+=1
+			if not "!channel%i%!"=="" (
+				set "label!i!=Channel No. !i!"
+				goto labelset2
+			)
+		)
+		IF /I "!userInput!"=="2" (
+			:labelset3
+			Set /A i+=1
+			if not "!channel%i%!"=="" (
+				set "label!i!=Channel #!i!"
+				goto labelset3
+			)
+		)
+		IF /I "!userInput!"=="3" (
+			:labelset4
+			Set /A i+=1
+			if not "!channel%i%!"=="" (
+				rem set "label!i!=Channel No. !i!"
+				for %%F in ("!channel%i%!") do set "label!i!=%%~nF"
+				goto labelset4
+			)
+		)
+		IF /I "!userInput!"=="4" (
+			call :inputbox "The following text applies to all channels, the letter $ is assigned to the channel number (Example: CH$ = CH1, CH2, CH3...)" "NSOVVG"
+			if not "!input!"=="" (
+				rem set labelstr=!input:$=%i%!
+				:labelset5
+				Set /A i+=1
+				set labelstr=!input:$=%i%!
+				if not "!channel%i%!"=="" (
+					set "label!i!=!labelstr!"
+					goto labelset5
+				)
+			)
+		)
+	)
+	if "!ERRORLEVEL!"=="2" (
+		call :inputbox "Please Set Amplification for All of Channels" "NSOVVG"
+		if not "!input!"=="" (
+			rem set "amp!configch!=!input!"
+			:labelset6
+				Set /A i+=1
+				rem set labelstr=!input:$=%i%!
+				if not "!channel%i%!"=="" (
+					set "amp!i!=!input!"
+					goto labelset6
+				)
+		)
+	)
+	if "!ERRORLEVEL!"=="3" (
+		rem call :inputbox "Please Type Hex Color for Channel No. !configch! (Example: 1CFF73)" "NSOVVG"
+		for /f "usebackq tokens=*" %%A in (`powershell -command ^
+		"Add-Type -AssemblyName System.Windows.Forms; $colorDialog = New-Object System.Windows.Forms.ColorDialog; if ($colorDialog.ShowDialog() -eq 'OK') { $colorDialog.Color.ToArgb().ToString('X8') } else { 'None' }"`) do set "color=%%A"
+
+		if not "!color!"=="None" (
+			rem set "color!configch!=#!color:~2!"
+			:labelset7
+				Set /A i+=1
+				rem set labelstr=!input:$=%i%!
+				if not "!channel%i%!"=="" (
+					rem set "amp!i!=!input!"
+					set "color!i!=#!color:~2!"
+					goto labelset7
+				)
+		)
+	)
+		goto drawlogo
+)
+if /i "!ERRORLEVEL!"=="10" (
+	if not defined channel1 ( call :errmsg "You have no channels to clear" && goto drawlogo )
+	SET i=0
+	call :MsgBox "You imported a lot of channels, are you sure to clear everything?"  "VBYesNo+VBQuestion" "NSOVVG"
+	REM echo !errorlevel!
+	REM pause
+	if "!errorlevel!"=="6" CALL :clearch
+
+	goto drawlogo
+	
 )
 rem pause 
 PAUSE
@@ -226,6 +374,15 @@ echo msgbox "%~1^!",vbOKOnly+vbCritical,"NSOVVG" > "!temp!\error.vbs"
 cscript //nologo "!temp!\error.vbs"
 goto :EOF
 
+:MsgBox prompt type title
+ rem setlocal enableextensions
+ set "tempFile=%temp%\%~nx0.%random%%random%%random%vbs.tmp"
+ >"%tempFile%" echo(WScript.Quit msgBox("%~1",%~2,"%~3") & cscript //nologo //e:vbscript "%tempFile%"
+ set "exitCode=%errorlevel%" & del "%tempFile%" >nul 2>nul
+ rem endlocal & exit /b %exitCode%
+ REM goto :EOF
+ exit /b %exitCode%
+ 
 :reallogo
 cls
 if "!linemode!"=="point" (
@@ -242,15 +399,15 @@ if "!linemode!"=="point" (
 if "!masteraudio!"=="None" (
 	set "mastername=[91mNone"
 ) else (
-	for %%F in (""!masteraudio!"") do set "mastername=[93m"%%~nxF"
+	for %%F in ("!masteraudio!") do set "mastername=[93m"%%~nxF""
 )
-echo.                                                                        
+echo [90mNSOVVG Version v1.0.0[0m
 echo    [1m[97m         ,--.              ,----..                                     	¦®¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬[Current Preset]¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¯
-echo           ,--.'^| .--.--.     /   /   \                         ,----..    	¦­  [32mChosen master audio: !mastername![97m		¦­
-echo       ,--,:  : ^|/  /    '.  /   .     :       ,---.      ,---./   /   \   	¦­  [32mVideo resolution:	[93m!x_res! x !y_res![97m		¦­
-echo    ,`--.'`^|  ' ^|  :  /`. / .   /   ;.  \     /__./^|     /__./^|   :     :  	¦­  [32mFPS:	[93m!fps!FPS[97m				¦­
+echo           ,--.'^| .--.--.     /   /   \                         ,----..    	¦­  [32mChosen Master Audio: !mastername![97m		¦­
+echo       ,--,:  : ^|/  /    '.  /   .     :       ,---.      ,---./   /   \   	¦­  [32mVideo Resolution:	[93m!x_res! x !y_res![97m		¦­
+echo    ,`--.'`^|  ' ^|  :  /`. / .   /   ;.  \     /__./^|     /__./^|   :     :  	¦­  [32mFPS:			[93m!fps!FPS[97m				¦­
 echo    ^|   :  :  ^| ;  ^|  ^|--` .   ;   /  ` ;,---.;  ; ^|,---.;  ; .   ^|  ;. /  	¦­  [32mDisplay Mode: [93m!linemode! !lmwv1![97m	¦­
-echo    :   ^|   \ ^| ^|  :  ;_   ;   ^|  ; \ ; /___/ \  ^| /___/ \  ^| .   ; /--`   	¦­												¦­
+echo    :   ^|   \ ^| ^|  :  ;_   ;   ^|  ; \ ; /___/ \  ^| /___/ \  ^| .   ; /--`   	¦­  												¦­
 echo    ^|   : '  '; ^|\  \    `.^|   :  ^| ; ^| \   ;  \ ' \   ;  \ ' ;   ^| ;  __  	¦­												¦­
 echo    '   ' ;.    ; `----.   .   ^|  ' ' ' :\   \  \: ^|\   \  \: ^|   : ^|.' .' 	¦­												¦­
 echo    ^|   ^| ^| \   ^| __ \  \  '   ;  \; /  ^| ;   \  ' . ;   \  ' .   ^| '_.' : 	¦­												¦­
@@ -261,11 +418,12 @@ echo    ;   ^|.'                    `---`          '---"      '---" \   \ .'    
 echo    '---'                                                       `---`      [0m
 echo.             Not Serious Oscilloscope View Video Generator
 echo.
+
 goto :EOF
 
 :channelshow
 if !i! equ 1 echo	[100m[97mChannels[0m
-if "!label%i%!"=="" ( set "displayedlabel=None" ) else ( set "displayedlabel="!label%i%!"" )
+if "!label%i%!"=="" ( set "displayedlabel=[91mNone" ) else ( set "displayedlabel="!label%i%!"" )
 echo 	[96mChannel No. !i! [93m"!channel%i%!" && echo [36m	 ¦¦¦¡¦¡¦¡ [96mLabel Text: [93m!displayedlabel!		[100m[97m^|^|[0m	[96mAmplification: [93m!amp%i%!		[100m[97m^|^|[0m	[96mWave Color: [93m!color%i%!
 set chcount=!i!
 rem echo !chcount!
@@ -306,7 +464,7 @@ rem set "linemode=p2p"
 set "bitrate=5000k"
 set "scalemode=lin"
 set "gain=4"
-set "gpu=h264_qsv"
+rem set "gpu=libx264"
 rem set "fps=60"
 ::USER CONFIG VAULES_END::
 rem @echo on
