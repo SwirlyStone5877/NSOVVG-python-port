@@ -2,6 +2,8 @@
 
 SETLOCAL ENABLEDELAYEDEXPANSION
 title Not Serious Oscilloscope View Video Generator - by @Èñ¹ÎHeemin
+rem chcp 949
+chcp 949 > nul	
 rem CHOICE /C PR /N /M "Press "P" to preview, or "R" to render. "
 :resetvariables
 set "masteraudio=None"
@@ -11,37 +13,82 @@ set "fps=60"
 set "bitrate=5000k"
 set "linemode=p2p"
 set "chosenfiles="
-rem set "configpath=%APPDATA%\NSOVVG\config.ini"
-echo Detecting your GPU... Please wait!
-set "gpu=libx264"
+set "progressbartestpath=!temp!\NSOVVG_displayrendering.bat"
+set "progresslogpath=!temp!\NSOVVG_ffmpegprogresslog.log"
+del /q !progresslogpath! 
+del /q !progressbartestpath! 
 
-rem FUCK WHY IT DOES NOT WORK AAAAAAAAAAAAAAAAAAAAAAA
+
+echo Detecting your GPU... Please wait!
+
+
 for /f "tokens=2 delims==" %%G in ('wmic path win32_videocontroller get name /value') do set "gpu_name=%%G"
 
 echo !gpu_name! | find /i "NVIDIA" >nul
 if %errorlevel%==0 (
     set "gpu=h264_nvenc"
-    goto drawlogo
+    goto bfdrawlogo
 )
 
 echo !gpu_name! | find /i "Intel" >nul
 if %errorlevel%==0 (
     set "gpu=h264_qsv"
-    goto drawlogo
+    goto bfdrawlogo
 )
 
 echo !gpu_name! | find /i "AMD" >nul
 if %errorlevel%==0 (
     set "gpu=h264_amf"
-    goto drawlogo
+    goto bfdrawlogo
 )
-REM echo !gpu!
 
 
+if not defined gpu set "gpu=libx264"
+:bfdrawlogo
 rem ecoh 
 
-REM set "channel1=fuck"
-
+REM set "channel1=fuck
+rem chcp 65001
+ echo @echo off> !progressbartestpath!
+ echo setlocal enabledelayedexpansion >> !progressbartestpath!
+ echo title Rendering... >> !progressbartestpath!
+ echo mode 53,7 >> !progressbartestpath!
+ echo for /f "tokens=* delims=" %%%%a in ('ffprobe -v error -show_entries format^^=duration -of default^^=noprint_wrappers^^=1:nokey^^=1 "%%~1"') do ( >> !progressbartestpath!
+ echo     set decimal_value=%%%%a >> !progressbartestpath!
+ echo ) >> !progressbartestpath!
+ echo for /f "usebackq tokens=* delims=" %%%%a in (`powershell -command "[math]::Round(%%decimal_value%% * 1000)"`) do ( >> !progressbartestpath!
+ echo 	set duration=%%%%a >> !progressbartestpath!
+ echo ) >> !progressbartestpath!
+ echo :a >> !progressbartestpath!
+ echo if not exist "%%~2" goto a >> !progressbartestpath!
+ echo set /p ifnone=^<"%%~2" >> !progressbartestpath!
+ echo if "^!ifnone^!"=="None" exit /b >> !progressbartestpath!
+ echo set "result=" >> !progressbartestpath!
+ echo for /f "tokens=2 delims==" %%%%a in ('findstr "out_time_ms" "%%~2"') do ( >> !progressbartestpath!
+ echo     set /a last_out_time=%%%%a / 1000 >> !progressbartestpath!
+ echo ) >> !progressbartestpath!
+ echo if not defined last_out_time goto a >> !progressbartestpath!
+ rem echo  >> !progressbartestpath!
+ echo set /a percent=(last_out_time*100)/duration >> !progressbartestpath!
+ echo set /a display=(last_out_time*50)/duration >> !progressbartestpath!
+ echo rem echo ¹éºÐÀ²: %%percent%%%% >> !progressbartestpath!
+ echo for /l %%%%i in (1,1,^^!display^^!) do set "result=^!result^![103m [0m" >> !progressbartestpath!
+ rem echo  >> !progressbartestpath!
+ rem echo :: ³ª¸ÓÁö´Â A·Î Ã¤¿ì±â >> !progressbartestpath!
+ echo set /a remaining=50-^^!display^^! >> !progressbartestpath!
+ echo for /l %%%%i in (1,1,^^!remaining^^!) do set "result=^!result^![44m [0m" >> !progressbartestpath!
+ echo if not defined result goto a >> !progressbartestpath!
+ echo cls >> !progressbartestpath!
+ echo echo [44m[97m¦®¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¯ >> !progressbartestpath!
+ echo echo ¦­   Not Serious Oscilloscope View Video Generator  ¦­ >> !progressbartestpath!
+ echo echo ¦­   Rendering: ^^!percent^^!%%%%				   ¦­ >> !progressbartestpath!
+ echo echo ¦­                                                  ¦­ >> !progressbartestpath!
+ echo echo ¦­^^!result^^![44m[97m¦­ >> !progressbartestpath!
+ echo echo ¦±¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦° >> !progressbartestpath!
+ echo timeout 1 ^> nul >> !progressbartestpath!
+ echo goto a >> !progressbartestpath!
+rem  chcp 949
+ rem del /q !progresslogpath!
 :drawlogo
 REM echo !gpu!
 call :reallogo
@@ -91,15 +138,15 @@ if /i "!ERRORLEVEL!"=="7" (
 		for /f "tokens=1,2,3 delims=x" %%a in ("!input!") do (
 			if not "%%a"=="" (
 				set /a XX=%%a-1
-				if {!XX!} == {-1} ( call :errmsg "Invalid number in XRES" ) ELSE ( set x_res=%%a )
+				if {!XX!} == {-1} ( call :errmsg "Invalid number in XRES" ) ELSE ( set "x_res=%%a" )
 			)
 			if not "%%b"=="" (
 				set /a XX=%%b-1
-				if {!XX!} == {-1} ( call :errmsg "Invalid number in YRES" ) ELSE ( set y_res=%%b )
+				if {!XX!} == {-1} ( call :errmsg "Invalid number in YRES" ) ELSE ( set "y_res=%%b" )
 			)
 			if not "%%c"=="" (
 				set /a XX=%%c-1 
-				if {!XX!} == {-1} ( call :errmsg "Invalid number in FPS" ) ELSE ( set fps=%%c )
+				if {!XX!} == {-1} ( call :errmsg "Invalid number in FPS" ) ELSE ( set "fps=%%c" )
 			)
 		)
 	)
@@ -401,7 +448,7 @@ if "!masteraudio!"=="None" (
 ) else (
 	for %%F in ("!masteraudio!") do set "mastername=[93m"%%~nxF""
 )
-echo [90mNSOVVG Version v1.0.0[0m
+echo [90mNSOVVG Version v1.0.1[0m
 echo    [1m[97m         ,--.              ,----..                                     	¦®¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬[Current Preset]¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¯
 echo           ,--.'^| .--.--.     /   /   \                         ,----..    	¦­  [32mChosen Master Audio: !mastername![97m		¦­
 echo       ,--,:  : ^|/  /    '.  /   .     :       ,---.      ,---./   /   \   	¦­  [32mVideo Resolution:	[93m!x_res! x !y_res![97m		¦­
@@ -586,14 +633,16 @@ if "!chcount!"=="1" (
 	set "layout=!layout!vstack=inputs=!chcount![v2];"
 	set "outer=-c:v !gpu! -format yuv420p -map [v2]"
 )
-echo ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% -f nut
+REM echo ffmpeg -i "%masterAudio%" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% -f nut
 :playorrender
 rem CHOICE /C PR /N /M "Press "P" to preview, or "R" to render. "
 if /i "!renderorpreview!"=="2" (
-
-	ffmpeg -loglevel quiet -stats -i "!masterAudio!" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% "!ffmpegoutput!"
+	del /q !progresslogpath!
+	start conhost !progressbartestpath! "!masterAudio!" "!progresslogpath!"
+	REM echo conhost !progressbartestpath! "!masterAudio!" "!progresslogpath!"
+	ffmpeg -progress !progresslogpath! -loglevel quiet -stats -i "!masterAudio!" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% "!ffmpegoutput!"
 	REM PAUSE
-	
+	echo None> !progresslogpath!
 ) else if /i "!renderorpreview!"=="1" (
 
 	ffmpeg -loglevel quiet -stats -i "!masterAudio!" %channelInputs% -filter_complex "%filterComplex% %layout%" -map 0:a -c:a aac %outer% -f nut - | ffplay - 
