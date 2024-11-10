@@ -44,4 +44,3 @@ def set_title(msg):
 
 set_title("Not Serious Oscilloscope View Video Generator - original by @희민Heemin, Python port by Swirly")
 # chcp 949?? what??
-resetvariables()
