@@ -70,4 +70,26 @@ except NameError:
     gpu = "libx264"
 
 with open(progressbartestpath, "w") as f:
-    pass
+    print("""import os
+    import platform
+    import fcntl
+    import termios
+    import struct
+    import sys
+    if platform.system() == "Windows":
+        import win32console
+    def set_title(msg):
+        if platform.system() in ["Linux", "Darwin"]:
+            GOOD_TERMINALS = ["xterm"]
+            if os.getenv("TERM") in GOOD_TERMINALS:
+                print("\x1B]0;%s\x07" % msg)
+        elif platform.system() == "Windows":
+            win32console.SetConsoleTitle(msg)  
+    
+    def set_terminal_size(width, height):
+        size = struct.pack("HHHH", height, width, 0, 0)
+        fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSWINSZ, size)
+    
+    set_terminal_size(53, 7)
+    
+    """, file=f)
