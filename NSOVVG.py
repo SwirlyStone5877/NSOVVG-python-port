@@ -12,23 +12,23 @@ elif platform.system() == "Windows":
         os.makedirs("C:\\Windows\\Temp\\NSOVVG")
     tmp_path = "C:\\Windows\\Temp\\NSOVVG\\"
 
-global masteraudio = None
-global bgimage = None
-global x_res = 1280
-global y_res = 720
-global fps = 60
-global bitrate = "5000k"
-global linemode = "p2p"
-global chosenfiles = []
-global progressbartestpath = f"{tmp_path}displayrendering.bat"
-global progresslogpath = f"{tmp_path}ffmpegprogresslog.log"
-global fontpickerpath = f"{tmp_path}fontPicker.py"
-global numberboxpath = f"{tmp_path}numberBox.py"
-global reorderboxpath = f"{tmp_path}reorder.py"
-global dffont = "Arial"
-global displayfont = "Arial"
-global fontsize = 14
-global fontcolor = "#FFFFFF"
+masteraudio = None
+bgimage = None
+x_res = 1280
+y_res = 720
+fps = 60
+bitrate = "5000k"
+linemode = "p2p"
+chosenfiles = []
+progressbartestpath = f"{tmp_path}displayrendering.bat"
+progresslogpath = f"{tmp_path}ffmpegprogresslog.log"
+fontpickerpath = f"{tmp_path}fontPicker.py"
+numberboxpath = f"{tmp_path}numberBox.py"
+reorderboxpath = f"{tmp_path}reorder.py"
+dffont = "Arial"
+displayfont = "Arial"
+fontsize = 14
+fontcolor = "#FFFFFF"
 if os.path.exists(progresslogpath):
     os.remove(progresslogpath)
     os.remove(progressbartestpath)
