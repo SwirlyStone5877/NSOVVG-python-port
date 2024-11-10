@@ -1,5 +1,7 @@
 import os
 import platform
+import GPUtil
+
 if platform.system() == "Windows":
     import win32console
 
@@ -44,3 +46,28 @@ def set_title(msg):
 
 set_title("Not Serious Oscilloscope View Video Generator - original by @희민Heemin, Python port by Swirly")
 # chcp 949?? what??
+print("Creating external scripts, please wait...")
+def get_available_gpus():
+    local_device_protos = device_lib.list_local_devices()
+    return [x.name for x in local_device_protos if x.device_type == 'GPU']
+print("Detecting GPU(s)...")
+gpus = GPUtil.getGPUs()
+for gpu in gpus:
+    if "NVIDIA" in gpu.name.split(" "):
+        gpu = "h264_nvenc"
+        break
+    elif "Intel" in gpu.name.split(" "):
+        gpu = "h264_qsv"
+        break
+    elif "AMD" in gpu.name.split(" "):
+        gpu = "h264_amf"
+        break
+try:
+    gpu
+except NameError:
+    if gpus == []:
+        print("No GPU(s) found, assuming libx264...")
+    gpu = "libx264"
+
+with open(progressbartestpath, "w") as f:
+    pass
